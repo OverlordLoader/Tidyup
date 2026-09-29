@@ -2,6 +2,27 @@
 
 Running reminder of what changed / was added (Henry's standing rule so other AI tools can see it).
 
+## 2026-09-29 — Milestone 2: monetization (ads + IAP)
+
+**Ads (Google Mobile Ads via SPM):**
+- Added `Game/AdsManager.swift`: configures the SDK at launch, loads/shows rewarded + interstitial ads. Rewarded placements: (a) free Magic Pour booster, (b) Second Chance (undo last 3 moves). Interstitial pacing: never for Remove-Ads owners, never during a new player's first 3 wins, at most every 3rd win after that, shown only at the win-overlay transition (Next/Levels), never mid-level.
+- `removeAds` flag disables ALL ads instantly (checked before every load/show).
+- Debug builds use Google's official test ad/app IDs; release builds have clearly-marked `TODO(Henry)` placeholders for real AdMob IDs (`AdsManager.swift` + `Info.plist` `GADApplicationIdentifier`). Ads fail gracefully offline — gameplay never blocks, loads retry in background.
+- SPM package `swift-package-manager-google-mobile-ads` (12.x) wired in `scripts/generate_project.py` (XCRemoteSwiftPackageReference + XCSwiftPackageProductDependency); `StoreKit.framework` also linked.
+
+**Purchases (StoreKit 2):**
+- Added `Game/StoreManager.swift`: product IDs `app.tidyup.game.removeads` (non-consumable, $4.99) and `app.tidyup.game.boosters.magicpour5` (consumable, $0.99 = 5 boosters, persisted locally). Transaction verification + `finish()`, `Transaction.updates` listener, `AppStore.sync()` restore, entitlement refresh on launch (refunds revoke remove-ads).
+- Added `Game/Views/SettingsView.swift`: store screen (gear on title + level select) with Remove Ads row (price → "Owned"), Magic Pour pack row (price + owned count), Restore Purchases. No dead UI.
+- Game HUD: Magic booster button with count badge in the bottom bar — tap uses an owned booster, or offers a rewarded ad / Settings purchase when empty. Rewind button offers rewarded ad for Second Chance.
+- `GameEngine`: added `magicPour()` (auto-completes the tube closest to completion, reuses completion/win animations) and `undo(count:)` (Second Chance = 3).
+- `PrivacyInfo.xcprivacy` now declares Device ID collected for third-party advertising (tracking=false, no IDFA used).
+
+**Docs:** README gained "Monetization setup" (exact IAP product IDs/types/prices for App Store Connect + AdMob checklist); project layout updated.
+
+**Needs Henry (can't be done from code):** create the two IAP products in App Store Connect with the exact IDs above; create AdMob account + rewarded/interstitial ad units and paste real IDs into the TODO spots; complete App Store Connect banking/tax + AdMob payments profile.
+
+**Deliberately left for later milestones:** themes, daily challenge/streaks, App Store Connect IAP/age-rating submission, TestFlight. (First Xcode compile still unverified — no Swift toolchain on this Linux box; hand-reviewed all new files.)
+
 ## 2026-09-29 — Milestone 1: playable core
 
 **New repo:** `OverlordLoader/tidyup` (public), bundle ID `app.tidyup.game`, display name "Tidy Up!".
