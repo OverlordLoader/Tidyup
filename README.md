@@ -4,7 +4,32 @@ A colorful hybrid-casual **color-sort puzzle** game for iOS. Sort mixed liquids 
 
 - **Stack:** native iOS, SwiftUI + SpriteKit, iOS 17+
 - **Bundle ID:** `app.tidyup.game`
-- **Monetization (later milestones):** hybrid ads + IAP, all through Apple IAP
+- **Monetization:** hybrid ads (AdMob) + IAP (StoreKit 2), all billing through Apple
+
+## Monetization setup (for Henry)
+
+The code is complete. These dashboard steps can't be done from code:
+
+**App Store Connect — in-app purchases** (create exactly these product IDs):
+
+| Product ID | Type | Price | What it does |
+|---|---|---|---|
+| `app.tidyup.game.removeads` | Non-consumable | $4.99 | Remove Ads — disables all ads immediately |
+| `app.tidyup.game.boosters.magicpour5` | Consumable | $0.99 | Pack of 5 Magic Pour boosters (auto-completes a tube) |
+
+Steps: App Store Connect → your app → Monetization → In-App Purchases → create each product with the exact ID above, matching type and price → submit with the app version. Sandbox testing works in TestFlight with a sandbox Apple ID.
+
+**AdMob checklist** (apps.admob.com):
+
+1. Create an AdMob account and add the **Tidy Up!** app (iOS, bundle `app.tidyup.game`).
+2. Create one **Rewarded** ad unit and one **Interstitial** ad unit.
+3. In `Game/AdsManager.swift`, replace the two `TODO(Henry)` placeholder IDs in the `#else` (release) branch with your real IDs.
+4. In `Info.plist`, replace the `GADApplicationIdentifier` test value with your real AdMob app ID.
+5. Verify banking/identity in your AdMob account — Google pays monthly once you cross $100.
+
+**How it behaves:** debug builds show Google's test ads automatically. Release builds show real ads only after Henry completes the steps above (until then the placeholder IDs simply fail to load — gameplay is unaffected). Buying Remove Ads disables every ad instantly. Interstitials show at most every 3rd level win, never during a new player's first 3 wins, never mid-level.
+
+**Privacy:** `PrivacyInfo.xcprivacy` now declares Device ID collected for third-party advertising (no tracking — no IDFA is used). In App Store Connect's privacy section, answer the advertising-identifier questions to match.
 
 ## Play it
 
@@ -16,7 +41,7 @@ Open `ios/App/App.xcodeproj` in Xcode 26+, pick the **App** scheme, run on a dev
 ios/App/App/
 ├── TidyUpApp.swift            # App entry
 ├── Info.plist
-├── PrivacyInfo.xcprivacy      # Zero data collection declared
+├── PrivacyInfo.xcprivacy      # Declares Device ID for third-party advertising (no tracking)
 ├── Assets.xcassets/           # AppIcon, AccentColor, LaunchBackground
 └── Game/
     ├── Palette.swift          # 10-color candy palette (SwiftUI + SpriteKit)
@@ -26,12 +51,15 @@ ios/App/App/
     ├── SoundManager.swift     # Runtime-synthesized SFX (no audio assets)
     ├── Haptics.swift          # Taptic accents
     ├── ProgressStore.swift    # Unlocked levels + stars in UserDefaults
+    ├── AdsManager.swift       # Google Mobile Ads: rewarded + interstitial, pacing rules
+    ├── StoreManager.swift     # StoreKit 2: products, purchase, restore, entitlements
     └── Views/
-        ├── ContentView.swift      # Title screen, How to play
-        ├── LevelSelectView.swift  # 50 levels, stars, locks
-        ├── GameView.swift         # HUD, controls, win overlay
+        ├── ContentView.swift      # Title screen, How to play, Settings gear
+        ├── LevelSelectView.swift  # 50 levels, stars, locks, Settings gear
+        ├── GameView.swift         # HUD, controls (Undo/Magic/Rewind/Restart), win overlay
         ├── BoardScene.swift       # SpriteKit playfield + animations
-        └── TubeNode.swift         # Glossy tube rendering + procedural textures
+        ├── TubeNode.swift         # Glossy tube rendering + procedural textures
+        └── SettingsView.swift     # Store: Remove Ads, Magic Pour pack, Restore Purchases
 scripts/
 ├── apple-release.py           # Signing/validation (shared pattern + tidyup bundle)
 ├── apple-release-test.py      # Release-safety unit tests (runs on PR / ubuntu)

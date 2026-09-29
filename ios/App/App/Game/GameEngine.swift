@@ -91,14 +91,59 @@ final class GameEngine: ObservableObject {
     }
 
     func undo() {
-        guard canUndo, let last = history.popLast() else { return }
-        tubes = last.tubes
-        moves = last.moves
+        undo(count: 1)
+    }
+
+    /// Undoes up to `n` moves at once (Second Chance booster).
+    func undo(count n: Int) {
+        var remaining = max(1, n)
+        var restored = false
+        while remaining > 0, canUndo {
+            guard let last = history.popLast() else { break }
+            tubes = last.tubes
+            moves = last.moves
+            remaining -= 1
+            restored = true
+        }
+        guard restored else { return }
         selected = nil
         completedNotified = Set(tubes.indices.filter { tubes[$0].isComplete })
         SoundManager.shared.play(.click)
         Haptics.tap()
         onEvent?(.stateRestored)
+    }
+
+    /// Magic Pour booster: auto-completes one tube. Picks the incomplete
+    /// tube closest to completion (most of its top color), fills it with
+    /// that color, and reuses the normal completion/win animations.
+    func magicPour() {
+        guard !busy, !won else { return }
+        var best: Int?
+        var bestScore = -1
+        for (i, tube) in tubes.enumerated() {
+            guard !tube.isEmpty, !tube.isComplete else { continue }
+            let score = tube.topRunLength * 10 + tube.segments.count
+            if score > bestScore { bestScore = score; best = i }
+        }
+        guard let idx = best, let color = tubes[idx].topColor else { return }
+        history.append((tubes, moves))
+        tubes[idx].segments = Array(repeating: color, count: tubeCapacity)
+        moves += 1
+        selected = nil
+        busy = true
+        onEvent?(.stateRestored)
+        if !completedNotified.contains(idx) {
+            completedNotified.insert(idx)
+            onEvent?(.tubeCompleted(idx))
+        }
+        if isSolved(tubes) {
+            won = true
+            lastStars = earnedStars()
+            ProgressStore.shared.recordWin(level: levelIndex, stars: lastStars)
+            onEvent?(.levelWon(stars: lastStars))
+        }
+        SoundManager.shared.play(.complete)
+        Haptics.complete()
     }
 
     func restart() {

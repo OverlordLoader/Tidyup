@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var path: [Route] = []
     @ObservedObject private var progress = ProgressStore.shared
     @State private var showHowTo = false
+    @State private var showSettings = false
     @State private var soundOn = ProgressStore.shared.soundEnabled
 
     var body: some View {
@@ -52,6 +53,14 @@ struct ContentView: View {
                             Image(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
                                 .foregroundColor(.white.opacity(0.85))
                         }
+                        Button {
+                            SoundManager.shared.play(.click)
+                            Haptics.tap()
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundColor(.white.opacity(0.85))
+                        }
                     }
                     HStack(spacing: 6) {
                         Image(systemName: "star.fill")
@@ -76,6 +85,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showHowTo) { howToSheet }
+            .sheet(isPresented: $showSettings) { SettingsView() }
         }
         .tint(Color(hex: 0xFFD60A))
         .onAppear {

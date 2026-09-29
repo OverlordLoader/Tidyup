@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LevelSelectView: View {
     @ObservedObject private var progress = ProgressStore.shared
+    @State private var showSettings = false
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 5)
 
     var body: some View {
@@ -29,6 +30,20 @@ struct LevelSelectView: View {
         }
         .navigationTitle("Levels")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    SoundManager.shared.play(.click)
+                    Haptics.tap()
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundColor(.white.opacity(0.85))
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) { SettingsView() }
+        .tint(Color(hex: 0xFFD60A))
     }
 
     @ViewBuilder

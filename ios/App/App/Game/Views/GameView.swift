@@ -8,6 +8,10 @@ struct GameView: View {
     @StateObject private var engine: GameEngine
     @State private var scene: BoardScene?
     @State private var soundOn: Bool
+    @State private var showSettings = false
+    @State private var showMagicAdOffer = false
+    @State private var showRewindAdOffer = false
+    @ObservedObject private var store = StoreManager.shared
     @Environment(\.dismiss) private var dismiss
 
     init(levelIndex: Int, onNext: (() -> Void)? = nil) {
@@ -42,6 +46,31 @@ struct GameView: View {
                     engine.onEvent = { [weak s] event in s?.handle(event) }
                     scene = s
                 }
+            }
+            .onChange(of: engine.won) { _, won in
+                if won { AdsManager.shared.recordLevelCompleted() }
+            }
+            .sheet(isPresented: $showSettings) { SettingsView() }
+            .alert("Out of Magic Pours", isPresented: $showMagicAdOffer) {
+                Button("Watch Ad for Free") {
+                    AdsManager.shared.showRewarded { earned in
+                        if earned { engine.magicPour() }
+                    }
+                }
+                Button("Get More") { showSettings = true }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Watch a short ad for a free Magic Pour, or grab a 5-pack in Settings.")
+            }
+            .alert("Second Chance", isPresented: $showRewindAdOffer) {
+                Button("Watch Ad") {
+                    AdsManager.shared.showRewarded { earned in
+                        if earned { engine.undo(count: 3) }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Watch a short ad to undo your last 3 moves at once.")
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -95,13 +124,52 @@ struct GameView: View {
     // MARK: - Bottom controls
 
     private var bottomBar: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 12) {
             controlButton(icon: "arrow.uturn.backward", label: "Undo",
                           disabled: !engine.canUndo) { engine.undo() }
+            magicButton
+            controlButton(icon: "arrow.counterclockwise.circle", label: "Rewind",
+                          disabled: engine.busy || engine.won) { showRewindAdOffer = true }
             controlButton(icon: "arrow.counterclockwise", label: "Restart",
                           disabled: engine.busy || engine.won) { engine.restart() }
         }
         .padding(.bottom, 30)
+    }
+
+    /// Magic Pour booster: uses an owned booster, or offers a rewarded ad.
+    private var magicButton: some View {
+        let disabled = engine.busy || engine.won
+        return Button {
+            SoundManager.shared.play(.click)
+            Haptics.tap()
+            if store.consumeBooster() {
+                engine.magicPour()
+            } else {
+                showMagicAdOffer = true
+            }
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                VStack(spacing: 4) {
+                    Image(systemName: "wand.and.stars").font(.title2.bold())
+                    Text("Magic").font(.caption.bold())
+                }
+                .foregroundColor(.white)
+                .frame(width: 80, height: 64)
+                .background(Color.white.opacity(disabled ? 0.06 : 0.16))
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .opacity(disabled ? 0.45 : 1)
+                if store.magicPourCount > 0 {
+                    Text("\(store.magicPourCount)")
+                        .font(.caption2.bold())
+                        .foregroundColor(Color(hex: 0x2B1B4D))
+                        .padding(6)
+                        .background(Color(hex: 0xFFD60A))
+                        .clipShape(Circle())
+                        .offset(x: 8, y: -8)
+                }
+            }
+        }
+        .disabled(disabled)
     }
 
     private func controlButton(icon: String, label: String, disabled: Bool,
@@ -112,7 +180,7 @@ struct GameView: View {
                 Text(label).font(.caption.bold())
             }
             .foregroundColor(.white)
-            .frame(width: 110, height: 64)
+            .frame(width: 80, height: 64)
             .background(Color.white.opacity(disabled ? 0.06 : 0.16))
             .clipShape(RoundedRectangle(cornerRadius: 18))
             .opacity(disabled ? 0.45 : 1)
@@ -144,13 +212,13 @@ struct GameView: View {
                     if onNext != nil {
                         Button("Next") {
                             SoundManager.shared.play(.click)
-                            onNext?()
+                            AdsManager.shared.showInterstitialIfDue { onNext?() }
                         }
                         .buttonStyle(WinButtonStyle(primary: true))
                     }
                     Button("Levels") {
                         SoundManager.shared.play(.click)
-                        dismiss()
+                        AdsManager.shared.showInterstitialIfDue { dismiss() }
                     }
                     .buttonStyle(WinButtonStyle())
                 }

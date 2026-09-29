@@ -19,17 +19,32 @@ SWIFT_SOURCES = [
     "Game/SoundManager.swift",
     "Game/Haptics.swift",
     "Game/ProgressStore.swift",
+    "Game/AdsManager.swift",
+    "Game/StoreManager.swift",
     "Game/Views/ContentView.swift",
     "Game/Views/LevelSelectView.swift",
     "Game/Views/GameView.swift",
     "Game/Views/BoardScene.swift",
     "Game/Views/TubeNode.swift",
+    "Game/Views/SettingsView.swift",
 ]
 RESOURCE_FILES = [
     ("Assets.xcassets", "wrapper.assetcatalog"),
     ("PrivacyInfo.xcprivacy", "text.plist.xml"),
 ]
-FRAMEWORKS = ["SpriteKit.framework", "AVFoundation.framework"]
+FRAMEWORKS = ["SpriteKit.framework", "AVFoundation.framework", "StoreKit.framework"]
+
+# Swift Package Manager dependencies. Each entry becomes an
+# XCRemoteSwiftPackageReference + XCSwiftPackageProductDependency.
+SPM_PACKAGES = [
+    {
+        "name": "swift-package-manager-google-mobile-ads",
+        "url": "https://github.com/googleads/swift-package-manager-google-mobile-ads",
+        "kind": "upToNextMajorVersion",
+        "minimumVersion": "12.0.0",
+        "products": ["GoogleMobileAds"],
+    },
+]
 
 _ids = {}
 _counter = [0]
@@ -76,6 +91,18 @@ def main():
     for fw in FRAMEWORKS:
         bid = nid("buildfw:" + fw)
         a(f"\t\t{bid} /* {fw} in Frameworks */ = {{isa = PBXBuildFile; fileRef = {nid('file:' + fw)} /* {fw} */; }};")
+
+    # ---- Swift packages ----
+    spm_pkg_ids = []
+    spm_dep_ids = []
+    for pkg in SPM_PACKAGES:
+        pkg_id = nid("spmpkg:" + pkg["name"])
+        spm_pkg_ids.append(pkg_id)
+        a(f"\t\t{pkg_id} /* XCRemoteSwiftPackageReference \"{pkg['name']}\" */ = {{isa = XCRemoteSwiftPackageReference; repositoryURL = \"{pkg['url']}\"; requirement = {{kind = {pkg['kind']}; minimumVersion = {pkg['minimumVersion']}; }}; }};")
+        for product in pkg["products"]:
+            dep_id = nid("spmdep:" + pkg["name"] + ":" + product)
+            spm_dep_ids.append(dep_id)
+            a(f"\t\t{dep_id} /* {product} */ = {{isa = XCSwiftPackageProductDependency; package = {pkg_id} /* XCRemoteSwiftPackageReference \"{pkg['name']}\" */; productName = {product}; }};")
 
     # ---- phases ----
     sources_id = nid("phase:sources")
@@ -125,7 +152,13 @@ def main():
     a(f"\t\t\t{res_id} /* Resources */,")
     a("\t\t); buildRules = (")
     a("\t\t); dependencies = (")
-    a("\t\t); name = App; productName = App; productReference = " + app_product_id + " /* App.app */; productType = \"com.apple.product-type.application\"; };")
+    a("\t\t); name = App;")
+    if spm_dep_ids:
+        a("\t\t\tpackageProductDependencies = (")
+        for dep_id in spm_dep_ids:
+            a(f"\t\t\t\t{dep_id} /* GoogleMobileAds */,")
+        a("\t\t\t);")
+    a("\t\tproductName = App; productReference = " + app_product_id + " /* App.app */; productType = \"com.apple.product-type.application\"; };")
 
     # ---- project ----
     project_id = nid("project")
@@ -136,6 +169,11 @@ def main():
     a("\t\t\tcompatibilityVersion = \"Xcode 14.0\";")
     a("\t\t\tdevelopmentRegion = en;")
     a("\t\t\thasScannedForEncodings = 0;")
+    if spm_pkg_ids:
+        a("\t\t\tpackageReferences = (")
+        for pkg_id in spm_pkg_ids:
+            a(f"\t\t\t\t{pkg_id} /* XCRemoteSwiftPackageReference \"swift-package-manager-google-mobile-ads\" */,")
+        a("\t\t\t);")
     a(f"\t\t\tmainGroup = {main_gid};")
     a("\t\t\tproductRefGroup = " + nid("group:Products") + " /* Products */;")
     a("\t\t\tprojectDirPath = \"\";")
