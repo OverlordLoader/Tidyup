@@ -1,3 +1,7 @@
+## 2026-09-30 — Restore built bundle identity
+
+The corrected SDK build compiled successfully, then artifact verification exposed a missing CFBundleIdentifier in the explicit Info.plist. Added the standard PRODUCT_BUNDLE_IDENTIFIER substitution so simulator installation receives the existing app.tidyup.game identity. This is a distinct configuration failure after the SDK error was resolved.
+
 ## 2026-09-30 — Repair Google Mobile Ads 12 compilation
 
 The first actual macOS simulator build exposed obsolete GAD-prefixed Swift names against the installed Google Mobile Ads 12 dependency. Updated the manager to the SDK's current types, shared instance, request and load APIs. Retained test advertising IDs in Debug and existing gameplay behavior. A corrective native build is required; source review alone is not a pass.
