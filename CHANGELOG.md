@@ -1,3 +1,7 @@
+## 2026-09-30 — Native simulator test build
+
+Added a separate unsigned simulator workflow on the existing review PR. It uses the standard public macOS runner, compiles the actual App scheme, installs/launches it in an available iPhone simulator, and saves the app archive, startup screenshot and build evidence. No signing secrets, purchases, Apple upload or release merge. A successful startup is explicitly not a full gameplay test or iPhone install. Source: `.github/workflows/ios-simulator.yml`, `scripts/simulator-smoke.py`.
+
 ## 2026-09-29 — Add guarded Apple release workflow
 
 Added manual-only main-branch signing with a repository-specific protected environment, immutable action versions, release-safety checks and opt-in TestFlight upload. No workflow dispatch or store submission performed. Apple app records, signed-device QA and truthful advertising/privacy metadata remain required.
