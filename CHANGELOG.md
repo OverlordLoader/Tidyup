@@ -1,3 +1,7 @@
+## 2026-09-30 — Repair Google Mobile Ads 12 compilation
+
+The first actual macOS simulator build exposed obsolete GAD-prefixed Swift names against the installed Google Mobile Ads 12 dependency. Updated the manager to the SDK's current types, shared instance, request and load APIs. Retained test advertising IDs in Debug and existing gameplay behavior. A corrective native build is required; source review alone is not a pass.
+
 ## 2026-09-30 — Native simulator test build
 
 Added a separate unsigned simulator workflow on the existing review PR. It uses the standard public macOS runner, compiles the actual App scheme, installs/launches it in an available iPhone simulator, and saves the app archive, startup screenshot and build evidence. No signing secrets, purchases, Apple upload or release merge. A successful startup is explicitly not a full gameplay test or iPhone install. Source: `.github/workflows/ios-simulator.yml`, `scripts/simulator-smoke.py`.
