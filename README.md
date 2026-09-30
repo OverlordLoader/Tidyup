@@ -35,6 +35,12 @@ Steps: App Store Connect → your app → Monetization → In-App Purchases → 
 
 Open `ios/App/App.xcodeproj` in Xcode 26+, pick the **App** scheme, run on a device or simulator (iPhone, portrait).
 
+## Official app icon
+
+The approved three-tube artwork is stored in `artwork/app-icon.png` (1024×1024, opaque RGB PNG). The app's `AppIcon` asset catalog contains all eight iPhone size/scale entries plus the App Store marketing icon. iOS applies its own rounded corners.
+
+To regenerate the catalog from the approved master, install Pillow and run `python scripts/generate_icons.py`. The generator resizes the approved image; it does not redraw or replace the design. A new app build is required for the icon to appear on installed devices and the App Store.
+
 ## Project layout
 
 ```
