@@ -1,3 +1,7 @@
+## 2026-09-29 — Add guarded Apple release workflow
+
+Added manual-only main-branch signing with a repository-specific protected environment, immutable action versions, release-safety checks and opt-in TestFlight upload. No workflow dispatch or store submission performed. Apple app records, signed-device QA and truthful advertising/privacy metadata remain required.
+
 # Tidy Up! — Changelog
 
 Running reminder of what changed / was added (Henry's standing rule so other AI tools can see it).
