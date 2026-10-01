@@ -4,6 +4,8 @@ on:
     paths:
       - "ios/**"
       - "scripts/simulator-smoke.py"
+      - "scripts/test-magic-pour.py"
+      - "scripts/magic-pour-tests.swift"
       - ".github/workflows/ios-simulator.yml"
 permissions:
   contents: read
@@ -19,6 +21,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+      - name: Verify Magic Pour conservation, solution witness and inventory boundary
+        run: python3 scripts/test-magic-pour.py
       - name: Compile and launch the actual game without signing
         run: python3 scripts/simulator-smoke.py
       - name: Preserve simulator app, startup screenshot and build log

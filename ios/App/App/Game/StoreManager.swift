@@ -94,6 +94,14 @@ final class StoreManager: ObservableObject {
 
     // MARK: - Boosters
 
+    /// Preserve an earned ad reward even if the board is busy or has no safe
+    /// completion. The normal authorization path spends it only on success.
+    @MainActor
+    func grantRewardedBooster() {
+        magicPourCount += 1
+        UserDefaults.standard.set(magicPourCount, forKey: Keys.magicPour)
+    }
+
     /// Consumes one owned Magic Pour booster. Returns false if none owned.
     @MainActor
     func consumeBooster() -> Bool {

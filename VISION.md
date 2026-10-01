@@ -1,5 +1,13 @@
 # tidyup
 
+## September 30, 2026 - Magic Pour conservation repair (review only)
+
+Magic Pour must help complete a tube without inventing or deleting liquid. Replaced the destructive tube overwrite with a bounded search for a full legal solution, applying only the prefix through the first newly completed tube. The unused suffix proves the remaining board remains solvable. Search stops at 2,000 expanded states / 128 moves, caches the unchanged board, and declines safely without charging when no solution is found within those limits. Some solvable boards can therefore have Magic Pour unavailable; no promise of universal solver coverage is made.
+
+Owned boosters are debited only after a valid result exists. Earned ad rewards are banked before application so a busy/unavailable board does not discard the reward. Undo restores the exact prior board and move count, but does not refund a spent consumable. Existing art, prices and ordinary pour rules remain unchanged.
+
+Verification: independent reference oracle covered 66 solvable two-color mixed boards and two unsolvable boards; the old overwrite breaks color counts on all 66 solvable fixtures. This is mathematical/reference evidence, not Swift execution. Added a macOS Swift harness compiling the actual rules, generator and engine; wired it before the existing unsigned simulator smoke test. Windows cannot execute the Swift/Combine harness. Native compilation, all-50-level availability/timing, simulator gameplay, earned-ad callbacks and physical-device/StoreKit acceptance remain OPEN. No workflow dispatched, code published or store submission performed by this repair.
+
 
 ## September 30, 2026 - Independent source verification
 

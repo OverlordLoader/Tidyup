@@ -1,3 +1,9 @@
+# September 30, 2026 — T8 Magic Pour source repair (unpublished)
+
+- Replaced color-destructive tube replacement with a certified legal solution prefix; bounded searches fail without board mutation or charge.
+- Moved booster debit behind plan validation; banked earned ad rewards; preserved non-refundable undo semantics.
+- Added actual Swift rule/engine regression harness and unsigned-simulator prerequisite. Native tests cannot run on this Windows host; no new native acceptance claim.
+
 ## 2026-09-30 — Restore built bundle identity
 
 The corrected SDK build compiled successfully, then artifact verification exposed a missing CFBundleIdentifier in the explicit Info.plist. Added the standard PRODUCT_BUNDLE_IDENTIFIER substitution so simulator installation receives the existing app.tidyup.game identity. This is a distinct configuration failure after the SDK error was resolved.

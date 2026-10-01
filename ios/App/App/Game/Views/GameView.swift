@@ -54,7 +54,10 @@ struct GameView: View {
             .alert("Out of Magic Pours", isPresented: $showMagicAdOffer) {
                 Button("Watch Ad for Free") {
                     AdsManager.shared.showRewarded { earned in
-                        if earned { engine.magicPour() }
+                        if earned {
+                            store.grantRewardedBooster()
+                            engine.magicPour(authorize: { store.consumeBooster() })
+                        }
                     }
                 }
                 Button("Get More") { showSettings = true }
@@ -138,13 +141,13 @@ struct GameView: View {
 
     /// Magic Pour booster: uses an owned booster, or offers a rewarded ad.
     private var magicButton: some View {
-        let disabled = engine.busy || engine.won
+        let disabled = !engine.canMagicPour
         return Button {
             SoundManager.shared.play(.click)
             Haptics.tap()
-            if store.consumeBooster() {
-                engine.magicPour()
-            } else {
+            if store.magicPourCount > 0 {
+                engine.magicPour(authorize: { store.consumeBooster() })
+            } else if engine.canMagicPour {
                 showMagicAdOffer = true
             }
         } label: {
