@@ -15,3 +15,7 @@ Declared the app-scoped UserDefaults required-reason API (CA92.1), based on the 
 Imported Muse's regenerated icon catalog; verify actual supplied image count and pixel sizes rather than assuming nine PNG files.
 
 Latest-main reconciliation: main now contains the approved icon set from merged PR2 (2d0385d). Preserved its exact master, generator and all nine opaque PNG catalog entries, instead of superseding approved artwork with the older Muse bundle. The downloaded bundle remains backed up locally. All nine sizes and pixel comparisons to the approved master pass. This merges main into the review branch only; no default/release branch was changed.
+
+## October 2, 2026 - Review PR #1 merged
+
+- 2026-10-02: PR #1 "Fix Magic Pour conservation and guard native release verification" merged to main - Magic Pour conservation repair and native release verification guard. Merge commit 3b426b8a5e6192bc763a50c10e60d6a9ec87eb5c.
