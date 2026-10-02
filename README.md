@@ -29,7 +29,7 @@ Steps: App Store Connect → your app → Monetization → In-App Purchases → 
 
 **How it behaves:** debug builds show Google's test ads automatically. Release builds show real ads only after Henry completes the steps above (until then the placeholder IDs simply fail to load — gameplay is unaffected). Buying Remove Ads disables every ad instantly. Interstitials show at most every 3rd level win, never during a new player's first 3 wins, never mid-level.
 
-**Privacy:** `PrivacyInfo.xcprivacy` now declares Device ID collected for third-party advertising (no tracking — no IDFA is used). In App Store Connect's privacy section, answer the advertising-identifier questions to match.
+**Privacy:** `PrivacyInfo.xcprivacy` now declares Device ID collected for third-party advertising (no tracking — no IDFA is used). Validate the combined SDK/app privacy report and actual data use before completing App Store privacy answers.
 
 ## Play it
 
@@ -109,4 +109,11 @@ Two deliberate adaptations vs. the sibling apps:
 
 ## Apple review posture
 
-No sign-in, no external billing or web links, fully playable offline, zero data collection (privacy manifest declares `NSPrivacyTracking: false`, no data types), every on-screen button works. Portrait iPhone only.
+No sign-in, no external billing or web links, fully playable offline, an ad SDK whose collection and consent behavior require final archive/network review, every on-screen button works. Portrait iPhone only.
+
+
+## Current launch-review status (September 30, 2026)
+
+The source and manual release workflow are now versioned in this repository. Earlier instructions to create the repository or manually upload a workflow from Muse's separate workspace are superseded. Signing stays manual, upload defaults to off, and no App Store submission has occurred.
+
+Privacy declarations must be reconciled with the signed archive and actual SDK/server behavior. The absence of an ATT prompt does not prove the absence of tracking or collection. Do not copy a Device-ID-only declaration into App Store Connect as a complete audit. App-scoped UserDefaults access is declared using CA92.1. Native build, device, purchase and legal acceptance remain open.

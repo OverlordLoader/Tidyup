@@ -65,3 +65,64 @@ func applyPour(tubes: inout [TubeState], move: PourMove) {
 func isSolved(_ tubes: [TubeState]) -> Bool {
     tubes.allSatisfy { $0.isEmpty || $0.isComplete }
 }
+
+/// Find a complete legal solution before spending a booster. A partial search
+/// is never used: preserving color counts alone does not prove solvability.
+/// Hard node/depth limits bound work, including on a dead-ended player board.
+func magicPourSolution(_ tubes: [TubeState], nodeLimit: Int = 2_000,
+                       depthLimit: Int = 128) -> [PourMove]? {
+    guard nodeLimit > 0, depthLimit > 0, !isSolved(tubes),
+          tubes.allSatisfy({ $0.segments.count <= tubeCapacity }) else { return nil }
+    let counts = Dictionary(grouping: tubes.flatMap(\.segments), by: { $0 })
+    guard counts.values.allSatisfy({ $0.count % tubeCapacity == 0 }) else { return nil }
+    var visited = Set<[[Int]]>()
+    var expanded = 0
+
+    func search(_ board: [TubeState], depth: Int) -> [PourMove]? {
+        if isSolved(board) { return [] }
+        guard depth < depthLimit, expanded < nodeLimit else { return nil }
+        // Tube positions do not affect rules; canonicalization avoids exploring
+        // permutations of empty tubes or simply moving a uniform stack.
+        let key = board.map(\.segments).sorted { $0.lexicographicallyPrecedes($1) }
+        guard visited.insert(key).inserted else { return nil }
+        expanded += 1
+        var candidates: [PourMove] = []
+        for from in board.indices {
+            for to in board.indices {
+                if let move = legalPour(tubes: board, from: from, to: to) {
+                    candidates.append(move)
+                }
+            }
+        }
+        func score(_ move: PourMove) -> Int {
+            let destination = board[move.to]
+            return (destination.segments.count + move.count == tubeCapacity ? 100 : 0)
+                + (destination.isEmpty ? 0 : 10) + move.count
+        }
+        candidates.sort {
+            if score($0) != score($1) { return score($0) > score($1) }
+            if $0.from != $1.from { return $0.from < $1.from }
+            return $0.to < $1.to
+        }
+        for move in candidates {
+            guard expanded < nodeLimit else { break }
+            var next = board
+            applyPour(tubes: &next, move: move)
+            if let tail = search(next, depth: depth + 1) { return [move] + tail }
+        }
+        return nil
+    }
+    return search(tubes, depth: 0)
+}
+
+/// Execute only the prefix ending at the first newly completed tube. The
+/// unused suffix remains a proof that the resulting board can still be solved.
+func magicPourResult(_ tubes: [TubeState]) -> [TubeState]? {
+    guard let solution = magicPourSolution(tubes) else { return nil }
+    var result = tubes
+    for move in solution {
+        applyPour(tubes: &result, move: move)
+        if result[move.to].isComplete { return result }
+    }
+    return nil
+}

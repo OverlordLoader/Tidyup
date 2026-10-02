@@ -1,3 +1,25 @@
+# September 30, 2026 — T8 Magic Pour source repair (unpublished)
+
+- Replaced color-destructive tube replacement with a certified legal solution prefix; bounded searches fail without board mutation or charge.
+- Moved booster debit behind plan validation; banked earned ad rewards; preserved non-refundable undo semantics.
+- Added actual Swift rule/engine regression harness and unsigned-simulator prerequisite. Native tests cannot run on this Windows host; no new native acceptance claim.
+
+## 2026-09-30 — Restore built bundle identity
+
+The corrected SDK build compiled successfully, then artifact verification exposed a missing CFBundleIdentifier in the explicit Info.plist. Added the standard PRODUCT_BUNDLE_IDENTIFIER substitution so simulator installation receives the existing app.tidyup.game identity. This is a distinct configuration failure after the SDK error was resolved.
+
+## 2026-09-30 — Repair Google Mobile Ads 12 compilation
+
+The first actual macOS simulator build exposed obsolete GAD-prefixed Swift names against the installed Google Mobile Ads 12 dependency. Updated the manager to the SDK's current types, shared instance, request and load APIs. Retained test advertising IDs in Debug and existing gameplay behavior. A corrective native build is required; source review alone is not a pass.
+
+## 2026-09-30 — Native simulator test build
+
+Added a separate unsigned simulator workflow on the existing review PR. It uses the standard public macOS runner, compiles the actual App scheme, installs/launches it in an available iPhone simulator, and saves the app archive, startup screenshot and build evidence. No signing secrets, purchases, Apple upload or release merge. A successful startup is explicitly not a full gameplay test or iPhone install. Source: `.github/workflows/ios-simulator.yml`, `scripts/simulator-smoke.py`.
+
+## 2026-09-29 — Add guarded Apple release workflow
+
+Added manual-only main-branch signing with a repository-specific protected environment, immutable action versions, release-safety checks and opt-in TestFlight upload. No workflow dispatch or store submission performed. Apple app records, signed-device QA and truthful advertising/privacy metadata remain required.
+
 # Tidy Up! — Changelog
 
 Running reminder of what changed / was added (Henry's standing rule so other AI tools can see it).
@@ -51,3 +73,11 @@ Running reminder of what changed / was added (Henry's standing rule so other AI 
 **Deliberately left for later milestones:** themes, daily challenge/streaks, boosters, AdMob ads, IAP products, App Store Connect IAP/age-rating setup, TestFlight.
 
 **Needs Henry:** App Store provisioning profile for `app.tidyup.game` (team 5U37FQG3VS) added to `app-store-release` env secrets before first release dispatch.
+
+
+## September 30, 2026 - Independent source verification
+
+Declared the app-scoped UserDefaults required-reason API (CA92.1), based on the app's actual preferences and local save calls. This does not certify App Store privacy answers or third-party SDK behavior. Final signed archive privacy reports and actual-device/network behavior remain release gates.
+Imported Muse's regenerated icon catalog; verify actual supplied image count and pixel sizes rather than assuming nine PNG files.
+
+Latest-main reconciliation: main now contains the approved icon set from merged PR2 (2d0385d). Preserved its exact master, generator and all nine opaque PNG catalog entries, instead of superseding approved artwork with the older Muse bundle. The downloaded bundle remains backed up locally. All nine sizes and pixel comparisons to the approved master pass. This merges main into the review branch only; no default/release branch was changed.

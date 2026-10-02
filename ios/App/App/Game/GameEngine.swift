@@ -32,6 +32,17 @@ final class GameEngine: ObservableObject {
     var levelNumber: Int { levelIndex + 1 }
     var canUndo: Bool { !history.isEmpty && !busy && !won }
 
+    private var magicCache: (board: [TubeState], result: [TubeState]?)?
+
+    private func plannedMagicPour() -> [TubeState]? {
+        if let cache = magicCache, cache.board == tubes { return cache.result }
+        let result = magicPourResult(tubes)
+        magicCache = (tubes, result)
+        return result
+    }
+
+    var canMagicPour: Bool { !busy && !won && plannedMagicPour() != nil }
+
     private let initial: [TubeState]
     private var history: [(tubes: [TubeState], moves: Int)] = []
     private var completedNotified: Set<Int> = []
@@ -113,26 +124,22 @@ final class GameEngine: ObservableObject {
         onEvent?(.stateRestored)
     }
 
-    /// Magic Pour booster: auto-completes one tube. Picks the incomplete
-    /// tube closest to completion (most of its top color), fills it with
-    /// that color, and reuses the normal completion/win animations.
-    func magicPour() {
-        guard !busy, !won else { return }
-        var best: Int?
-        var bestScore = -1
-        for (i, tube) in tubes.enumerated() {
-            guard !tube.isEmpty, !tube.isComplete else { continue }
-            let score = tube.topRunLength * 10 + tube.segments.count
-            if score > bestScore { bestScore = score; best = i }
-        }
-        guard let idx = best, let color = tubes[idx].topColor else { return }
+    /// Complete a tube using a certified legal prefix, never by replacing
+    /// liquid. Authorization (inventory debit) happens only after a valid plan.
+    /// Undo restores the board, but does not refund a spent consumable.
+    @discardableResult
+    func magicPour(authorize: () -> Bool = { true }) -> Bool {
+        guard !busy, !won, let result = plannedMagicPour(), authorize() else { return false }
+        let completed = result.indices.filter { result[$0].isComplete && !tubes[$0].isComplete }
         history.append((tubes, moves))
-        tubes[idx].segments = Array(repeating: color, count: tubeCapacity)
+        tubes = result
         moves += 1
         selected = nil
         busy = true
         onEvent?(.stateRestored)
-        if !completedNotified.contains(idx) {
+        for idx in completed where !completedNotified.contains(idx) {
+            // stateRestored can finish synchronously and unlock input.
+            busy = true
             completedNotified.insert(idx)
             onEvent?(.tubeCompleted(idx))
         }
@@ -144,6 +151,7 @@ final class GameEngine: ObservableObject {
         }
         SoundManager.shared.play(.complete)
         Haptics.complete()
+        return true
     }
 
     func restart() {

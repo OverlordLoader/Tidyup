@@ -24,8 +24,8 @@ final class AdsManager: NSObject, ObservableObject {
     @Published private(set) var rewardedReady = false
     @Published private(set) var interstitialReady = false
 
-    private var rewardedAd: GADRewardedAd?
-    private var interstitialAd: GADInterstitialAd?
+    private var rewardedAd: RewardedAd?
+    private var interstitialAd: InterstitialAd?
     private var pendingRewardCompletion: ((Bool) -> Void)?
     private var pendingInterstitialCompletion: (() -> Void)?
     private var rewardEarned = false
@@ -39,7 +39,7 @@ final class AdsManager: NSObject, ObservableObject {
 
     /// Call once at app launch.
     func configure() {
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        MobileAds.shared.start(completionHandler: nil)
         loadRewarded()
         loadInterstitial()
     }
@@ -48,7 +48,7 @@ final class AdsManager: NSObject, ObservableObject {
 
     private func loadRewarded() {
         guard !StoreManager.shared.removeAds else { return }
-        GADRewardedAd.load(withAdUnitID: Self.rewardedAdUnitID, request: GADRequest()) { [weak self] ad, _ in
+        RewardedAd.load(with: Self.rewardedAdUnitID, request: Request()) { [weak self] ad, _ in
             guard let self else { return }
             DispatchQueue.main.async {
                 if let ad {
@@ -89,7 +89,7 @@ final class AdsManager: NSObject, ObservableObject {
 
     private func loadInterstitial() {
         guard !StoreManager.shared.removeAds else { return }
-        GADInterstitialAd.load(withAdUnitID: Self.interstitialAdUnitID, request: GADRequest()) { [weak self] ad, _ in
+        InterstitialAd.load(with: Self.interstitialAdUnitID, request: Request()) { [weak self] ad, _ in
             guard let self else { return }
             DispatchQueue.main.async {
                 if let ad {
@@ -150,11 +150,11 @@ final class AdsManager: NSObject, ObservableObject {
     }
 }
 
-// MARK: - GADFullScreenContentDelegate
+// MARK: - FullScreenContentDelegate
 
-extension AdsManager: GADFullScreenContentDelegate {
-    func adDidDismissFullScreenContent(_ ad: GADFullScreenPresentingAd) {
-        if ad as? GADRewardedAd != nil {
+extension AdsManager: FullScreenContentDelegate {
+    func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
+        if ad as? RewardedAd != nil {
             rewardedAd = nil
             let completion = pendingRewardCompletion
             pendingRewardCompletion = nil
@@ -162,7 +162,7 @@ extension AdsManager: GADFullScreenContentDelegate {
             rewardEarned = false
             completion?(earned)
             loadRewarded()
-        } else if ad as? GADInterstitialAd != nil {
+        } else if ad as? InterstitialAd != nil {
             interstitialAd = nil
             let completion = pendingInterstitialCompletion
             pendingInterstitialCompletion = nil
@@ -171,14 +171,14 @@ extension AdsManager: GADFullScreenContentDelegate {
         }
     }
 
-    func ad(_ ad: GADFullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
-        if ad as? GADRewardedAd != nil {
+    func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: Error) {
+        if ad as? RewardedAd != nil {
             rewardedAd = nil
             pendingRewardCompletion?(false)
             pendingRewardCompletion = nil
             rewardEarned = false
             loadRewarded()
-        } else if ad as? GADInterstitialAd != nil {
+        } else if ad as? InterstitialAd != nil {
             interstitialAd = nil
             pendingInterstitialCompletion?()
             pendingInterstitialCompletion = nil
