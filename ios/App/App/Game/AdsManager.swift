@@ -1,3 +1,4 @@
+#if canImport(GoogleMobileAds)
 import Foundation
 import Combine
 import UIKit
@@ -186,3 +187,24 @@ extension AdsManager: FullScreenContentDelegate {
         }
     }
 }
+#else
+import Foundation
+import Combine
+import UIKit
+
+/// Mac test build: the Google Mobile Ads SDK ships no Mac Catalyst library, so
+/// ads are compiled out. Rewarded "ads" grant the reward immediately so every
+/// reward path can be tested; interstitials never show.
+final class AdsManager: NSObject, ObservableObject {
+    static let shared = AdsManager()
+    @Published private(set) var rewardedReady = true
+    @Published private(set) var interstitialReady = false
+    private override init() { super.init() }
+    static func bumpSessionCount() {}
+    func configure() {}
+    func recordLevelCompleted() {}
+    func recordGameOver() {}
+    func showRewarded(completion: @escaping (Bool) -> Void) { completion(true) }
+    func showInterstitialIfDue(completion: @escaping () -> Void) { completion() }
+}
+#endif
