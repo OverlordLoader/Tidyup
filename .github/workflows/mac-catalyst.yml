@@ -21,6 +21,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer && xcodebuild -version
+      - name: Strip Google Mobile Ads (no Mac Catalyst library exists; AdsManager has a compiled-out stub)
+        run: |
+          PBX="$PROJECT/project.pbxproj"
+          sed -i '' '/GoogleMobileAds\|UserMessagingPlatform\|google-mobile-ads\|google-user-messaging/d' "$PBX"
+          echo "package references left: $(grep -c XCRemoteSwiftPackageReference "$PBX" || true)"
       - name: Enable Mac Catalyst in the project (build-time only, nothing committed)
         run: |
           set -e
