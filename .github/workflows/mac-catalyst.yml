@@ -28,15 +28,15 @@ jobs:
           import re, sys
           p = sys.argv[1]; s = open(p).read()
           pat = re.compile(r'GoogleMobileAds|UserMessagingPlatform|google-mobile-ads|google-user-messaging')
-          lines = s.split('
-'); out = []; removed = set(); i = 0
+          lines = s.split(chr(10)); out = []; removed = set(); i = 0
           while i < len(lines):
               line = lines[i]
-              m = re.match(r'\s*([0-9A-F]{24}) /\*.*?\*/ = \{', line)
+              m = re.match(r'[ \t]*([0-9A-F]{24}) /[*].*?[*]/ = [{]', line)
               if m and pat.search(line):
                   removed.add(m.group(1))
                   if line.rstrip().endswith('};'):
-                      i += 1; continue
+                      i += 1
+                      continue
                   depth = 1; i += 1
                   while i < len(lines) and depth > 0:
                       st = lines[i].strip()
@@ -46,9 +46,8 @@ jobs:
                   continue
               out.append(line); i += 1
           final = [l for l in out if not any(r in l for r in removed) and not (pat.search(l) and l.strip().endswith(','))]
-          open(p, 'w').write('
-'.join(final))
-          print('removed objects:', len(removed), file=sys.stderr)
+          open(p, 'w').write(chr(10).join(final))
+          print('removed objects:', len(removed))
           PY
           echo "package references left: $(grep -c XCRemoteSwiftPackageReference "$PBX" || true)"
       - name: Enable Mac Catalyst in the project (build-time only, nothing committed)
@@ -56,12 +55,18 @@ jobs:
           set -e
           PBX="$PROJECT/project.pbxproj"
           grep -q "SUPPORTS_MACCATALYST" "$PBX" || \
-            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = \([0-9.]*\);/IPHONEOS_DEPLOYMENT_TARGET = \1; SUPPORTS_MACCATALYST = YES; DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES; TARGETED_DEVICE_FAMILY = "1,2";/' "$PBX"
-          # Make sure a shared scheme exists so xcodebuild can pick a destination.
+            sed -i '' -E 's/IPHONEOS_DEPLOYMENT_TARGET = ([0-9.]*);/IPHONEOS_DEPLOYMENT_TARGET = \1; SUPPORTS_MACCATALYST = YES; DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = YES; TARGETED_DEVICE_FAMILY = "1,2";/' "$PBX"
           SCHEMES="$PROJECT/xcshareddata/xcschemes"
           if [ ! -f "$SCHEMES/$SCHEME.xcscheme" ]; then
             mkdir -p "$SCHEMES"
-            TID=$(python3 -c "import re,sys; s=open(sys.argv[1]).read(); m=re.search(r'([0-9A-F]{24}) /\*[^*]*\*/ = \{\s*isa = PBXNativeTarget;', s, re.S); print(m.group(1) if m else '')" "$PBX")
+            TID=$(python3 - "$PBX" <<'PY'
+          import re, sys
+          s = open(sys.argv[1]).read()
+          m = re.search(r'([0-9A-F]{24}) /[*][^*]*[*]/ = [{][ \t\r\n]*isa = PBXNativeTarget;', s)
+          print(m.group(1) if m else '')
+          PY
+          )
+            echo "Target id: $TID"
             cat > "$SCHEMES/$SCHEME.xcscheme" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <Scheme LastUpgradeVersion="1600" version="1.7">
@@ -79,7 +84,6 @@ jobs:
             </LaunchAction>
           </Scheme>
           EOF
-            echo "Created scheme $SCHEME for target $TID"
           fi
           xcodebuild -project "$PROJECT" -list | head -30
       - name: Build for Mac Catalyst
